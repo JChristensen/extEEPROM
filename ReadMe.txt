@@ -9,9 +9,9 @@ http://creativecommons.org/licenses/by-sa/3.0/ or send a letter to Creative
 Commons, 171 Second Street, Suite 300, San Francisco, California, 94105, USA.
 
 ================================================================================
-Arduino library to support external I2C EEPROMs including:
- - 24XX256 series (256kb, 32kB)
- - M24M02 (2Mb, 512kB)
+Arduino library to support external I2C EEPROMs, including:
+ - 24XX256 series (256k bit, 32k Byte)
+ - M24M02 (2M bit, 256k Byte)
 
 Tested with 24LC256, 24FC256, M24M02. Should also work with 24AA256.
 --------------------------------------------------------------------------------
@@ -30,9 +30,6 @@ The following example sketches are included with the library:
 (No examples yet.)
 
 --------------------------------------------------------------------------------
-The extEEPROM library instantiates an object named EEEP (External EE
-Prom) with which the library's methods are accessed.
-
 Note the following limitations:
 - The Arduino Wire library has a buffer size of 32 bytes, this
   limits the size of I/Os that can be done to the EEPROMs. For

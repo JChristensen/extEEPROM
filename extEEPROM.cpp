@@ -1,8 +1,8 @@
 /*----------------------------------------------------------------------*
  * extEEPROM.h - Arduino library to support external I2C EEPROMs.       *
  * Devices supported include:                                           *
- * - 24XX256 series 256kb/32kB                                          *
- * - M24M02 2Mb/512kB                                                   *
+ * - 24XX256 series 256k bit/32k Byte                                   *
+ * - M24M02 2M bit/256k Byte                                            *
  *                                                                      *
  * The extEEPROM library instantiates an object named EEEP (External EE *
  * Prom) with which the library's methods are accessed.                 *
@@ -34,13 +34,13 @@
 /*----------------------------------------------------------------------*
  * Constructor.                                                         *
  * deviceCapacity is the capacity of a single EEPROM device in          *
- * kilobytes (kB) and should be either 32 or 512. Other values will     *
+ * kilobytes (kB) and should be either 32 or 256. Other values will     *
  * result in undefined behavior!                                        *
  *----------------------------------------------------------------------*/
 extEEPROM::extEEPROM(unsigned int deviceCapacity)
 {
-    _devSize = deviceCapacity;
-    if (_devSize == 512)
+    _dvcSize = deviceCapacity;
+    if (_dvcSize == 256)
         _addrShift = 16;
     else
         _addrShift = 15;
@@ -114,5 +114,3 @@ byte extEEPROM::read(unsigned long addr)
     read(addr, &value, 1);
     return value;
 }
-
-extEEPROM EEEP = extEEPROM();    //instantiate an External EEProm object
