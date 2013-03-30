@@ -4,22 +4,12 @@
  * - 24XX256 series 256k bit/32k Byte                                   *
  * - M24M02 2M bit/256k Byte                                            *
  *                                                                      *
- * The extEEPROM library instantiates an object named EEEP (External EE *
- * Prom) with which the library's methods are accessed.                 *
+ * To use the extEEPROM library, the Arduino Wire library must be       *
+ * included.                                                            *
  *                                                                      *
- * Note the following limitations:                                      *
- * - The Arduino Wire library has a buffer size of 32 bytes, this       *
- *   limits the size of I/Os that can be done to the EEPROMs. For       *
- *   writes, two bytes are used for address, so data is therefore       *
- *   limited to 30 bytes.                                               *
- * - Multiple EEPROM devices can be addressed on the same bus; the      *
- *   user must connect the EEPROM address pins appropriately.           *
- * - The user must ensure that I/Os do not cross page or device         *
- *   boundaries.                                                        *
- * - To use the extEEPROM library, the Arduino Wire library must be     *
- *   included.                                                          *
- *                                                                      *
- * Jack Christensen 23Mar2013                                           *
+ * Jack Christensen 23Mar2013 v1                                        *
+ * 29Mar2013 v2 - updated to span page boundaries (and therefore also   *
+ * device boundaries, assuming an integral number of pages per device)  *
  *                                                                      *
  * This work is licensed under the Creative Commons Attribution-        *
  * ShareAlike 3.0 Unported License. To view a copy of this license,     *
@@ -36,10 +26,12 @@
  * deviceCapacity is the capacity of a single EEPROM device in          *
  * kilobytes (kB) and should be either 32 or 256. Other values will     *
  * result in undefined behavior!                                        *
+ * pageSize is in bytes.                                                *
  *----------------------------------------------------------------------*/
-extEEPROM::extEEPROM(unsigned int deviceCapacity)
+extEEPROM::extEEPROM(unsigned int deviceCapacity, byte pageSize)
 {
     _dvcSize = deviceCapacity;
+    _pageSize = pageSize;
     if (_dvcSize == 256)
         _addrShift = 16;
     else
@@ -48,69 +40,67 @@ extEEPROM::extEEPROM(unsigned int deviceCapacity)
 }
 
 /*----------------------------------------------------------------------*
- * Write multiple bytes to external EEPROM.                             *
- * Number of bytes (nBytes) must be between 1 and 30 (Wire library      *
- * limitation).                                                         *
+ * Write bytes to external EEPROM.                                      *
  *----------------------------------------------------------------------*/
 byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
 {
-    byte deviceAddr = EEPROM_ADDR | (byte) (addr >> _addrShift);
-    byte txStatus;
+    uint8_t deviceAddr = EEPROM_ADDR | (byte) (addr >> _addrShift);     //I2C device address
+    uint8_t txStatus;       //transmit status
+    uint8_t nWrite;         //number of bytes to write
+    uint8_t nPage;          //number of bytes remaining on current page, starting at addr
     
-    Wire.beginTransmission(deviceAddr);
-    i2cWrite( (byte) (addr >> 8) );            //address high byte
-    i2cWrite( (byte) addr );                   //address low byte
-    i2cWrite(values, nBytes);
-    txStatus = Wire.endTransmission();
-    if (txStatus != 0) return txStatus;
-    
-    //wait up to 50ms for the write to complete
-    for (uint8_t i=100; i; --i) {
-        delayMicroseconds(500);                //no point in waiting too fast
+    while (nBytes > 0) {
+        nPage = _pageSize - ( addr & (_pageSize - 1) );
+        //find min(nBytes, nPage, BUFFER_LENGTH) -- BUFFER_LENGTH is defined in the Wire library.
+        nWrite = nBytes < nPage ? nBytes : nPage;
+        nWrite = BUFFER_LENGTH - 2 < nWrite ? BUFFER_LENGTH - 2 : nWrite;   //allow 2 bytes for address
         Wire.beginTransmission(deviceAddr);
-        i2cWrite(0); i2cWrite(0);              //high and low address bytes
+        i2cWrite( (byte) (addr >> 8) );            //address high byte
+        i2cWrite( (byte) addr );                   //address low byte
+        i2cWrite(values, nWrite);
         txStatus = Wire.endTransmission();
-        if (txStatus == 0) break;
+        if (txStatus != 0) return txStatus;
+    
+        //wait up to 50ms for the write to complete
+        for (uint8_t i=100; i; --i) {
+            delayMicroseconds(500);                //no point in waiting too fast
+            Wire.beginTransmission(deviceAddr);
+            i2cWrite(0); i2cWrite(0);              //high and low address bytes
+            txStatus = Wire.endTransmission();
+            if (txStatus == 0) break;
+        }
+        if (txStatus != 0) return txStatus;
+        
+        addr += nWrite;         //increment the EEPROM address
+        values += nWrite;       //increment the input data pointer
+        nBytes -= nWrite;       //decrement the number of bytes left to write
     }
     return txStatus;
 }
 
 /*----------------------------------------------------------------------*
- * Write a single byte to external EEPROM.                              *
- *----------------------------------------------------------------------*/
-byte extEEPROM::write(unsigned long addr, byte value)
-{
-    return write(addr, &value, 1);
-}
-
-/*----------------------------------------------------------------------*
- * Read multiple bytes from external EEPROM.                            *
- * Number of bytes (nBytes) must be between 1 and 32 (Wire library      *
- * limitation).                                                         *
+ * Read bytes from external EEPROM.                                     *
  *----------------------------------------------------------------------*/
 byte extEEPROM::read(unsigned long addr, byte *values, byte nBytes)
 {
     byte deviceAddr = EEPROM_ADDR | (byte) (addr >> _addrShift);
     byte rxStatus;
+    uint8_t nRead;              //number of bytes to read
 
-    Wire.beginTransmission(deviceAddr);
-    i2cWrite( (byte) (addr >> 8) );            //address high byte
-    i2cWrite( (byte) addr );                   //address low byte
-    rxStatus = Wire.endTransmission();
-    if (rxStatus != 0) return rxStatus;        //read error
+    while (nBytes > 0) {
+        nRead = BUFFER_LENGTH < nBytes ? BUFFER_LENGTH : nBytes;
+        Wire.beginTransmission(deviceAddr);
+        i2cWrite( (byte) (addr >> 8) );            //address high byte
+        i2cWrite( (byte) addr );                   //address low byte
+        rxStatus = Wire.endTransmission();
+        if (rxStatus != 0) return rxStatus;        //read error
     
-    Wire.requestFrom(deviceAddr, nBytes );
-    for (byte i=0; i<nBytes; i++) values[i] = i2cRead();
+        Wire.requestFrom(deviceAddr, nRead);
+        for (byte i=0; i<nRead; i++) values[i] = i2cRead();
+
+        addr += nRead;          //increment the EEPROM address
+        values += nRead;        //increment the input data pointer
+        nBytes -= nRead;        //decrement the number of bytes left to write
+    }
     return 0;
-}
-
-/*----------------------------------------------------------------------*
- * Read a single byte from external EEPROM.                             *
- *----------------------------------------------------------------------*/
-byte extEEPROM::read(unsigned long addr)
-{
-    byte value;
-
-    read(addr, &value, 1);
-    return value;
 }

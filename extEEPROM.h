@@ -4,22 +4,12 @@
  * - 24XX256 series 256k bit/32k Byte                                   *
  * - M24M02 2M bit/256k Byte                                            *
  *                                                                      *
- * The extEEPROM library instantiates an object named EEEP (External EE *
- * Prom) with which the library's methods are accessed.                 *
+ * To use the extEEPROM library, the Arduino Wire library must be       *
+ * included.                                                            *
  *                                                                      *
- * Note the following limitations:                                      *
- * - The Arduino Wire library has a buffer size of 32 bytes, this       *
- *   limits the size of I/Os that can be done to the EEPROMs. For       *
- *   writes, two bytes are used for address, so data is therefore       *
- *   limited to 30 bytes.                                               *
- * - Multiple EEPROM devices can be addressed on the same bus; the      *
- *   user must connect the EEPROM address pins appropriately.           *
- * - The user must ensure that I/Os do not cross page or device         *
- *   boundaries.                                                        *
- * - To use the extEEPROM library, the Arduino Wire library must be     *
- *   included.                                                          *
- *                                                                      *
- * Jack Christensen 23Mar2013                                           *
+ * Jack Christensen 23Mar2013 v1                                        *
+ * 29Mar2013 v2 - updated to span page boundaries (and therefore also   *
+ * device boundaries, assuming an integral number of pages per device)  *
  *                                                                      *
  * This work is licensed under the Creative Commons Attribution-        *
  * ShareAlike 3.0 Unported License. To view a copy of this license,     *
@@ -52,15 +42,14 @@
 class extEEPROM
 {
     public:
-        extEEPROM(unsigned int deviceCapacity);
+        extEEPROM(unsigned int deviceCapacity, byte pageSize);
         byte write(unsigned long addr, byte *values, byte nBytes);
-        byte write(unsigned long addr, byte value);
         byte read(unsigned long addr, byte *values, byte nBytes);
-        byte read(unsigned long addr);
         
     private:
-        unsigned int _dvcSize;      //capacity of one EEPROM device, in kilobytes (kB)
-        byte _addrShift;
+        uint16_t _dvcSize;      //capacity of one EEPROM device, in kilobytes (kB)
+        uint8_t _pageSize;
+        uint8_t _addrShift;
 };
 
 #endif
