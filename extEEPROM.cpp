@@ -50,7 +50,7 @@ extEEPROM::extEEPROM(unsigned int deviceCapacity, byte nDevice, byte pageSize)
  *----------------------------------------------------------------------*/
 byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
 {
-    uint8_t deviceAddr = EEPROM_ADDR | (byte) (addr >> _addrShift);     //I2C device address
+    uint8_t deviceAddr;     //I2C device address
     uint8_t txStatus;       //transmit status
     uint8_t nWrite;         //number of bytes to write
     uint8_t nPage;          //number of bytes remaining on current page, starting at addr
@@ -64,6 +64,7 @@ byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
         //find min(nBytes, nPage, BUFFER_LENGTH) -- BUFFER_LENGTH is defined in the Wire library.
         nWrite = nBytes < nPage ? nBytes : nPage;
         nWrite = BUFFER_LENGTH - 2 < nWrite ? BUFFER_LENGTH - 2 : nWrite;   //allow 2 bytes for address
+        deviceAddr = EEPROM_ADDR | (byte) (addr >> _addrShift);
         Wire.beginTransmission(deviceAddr);
         i2cWrite( (byte) (addr >> 8) );            //address high byte
         i2cWrite( (byte) addr );                   //address low byte
@@ -96,16 +97,20 @@ byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
  *----------------------------------------------------------------------*/
 byte extEEPROM::read(unsigned long addr, byte *values, byte nBytes)
 {
-    byte deviceAddr = EEPROM_ADDR | (byte) (addr >> _addrShift);
+    byte deviceAddr;
     byte rxStatus;
     uint8_t nRead;              //number of bytes to read
+    uint8_t nPage;              //number of bytes remaining on current page, starting at addr
 
     if (addr + nBytes > _totalCapacity) {   //will this read take us past the top of the EEPROM?
         return 9;                           //yes, tell the caller
     }
 
     while (nBytes > 0) {
-        nRead = BUFFER_LENGTH < nBytes ? BUFFER_LENGTH : nBytes;
+        nPage = _pageSize - ( addr & (_pageSize - 1) );
+        nRead = nBytes < nPage ? nBytes : nPage;
+        nRead = BUFFER_LENGTH < nRead ? BUFFER_LENGTH : nRead;
+        deviceAddr = EEPROM_ADDR | (byte) (addr >> _addrShift);
         Wire.beginTransmission(deviceAddr);
         i2cWrite( (byte) (addr >> 8) );            //address high byte
         i2cWrite( (byte) addr );                   //address low byte
