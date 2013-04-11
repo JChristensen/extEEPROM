@@ -42,14 +42,16 @@
 class extEEPROM
 {
     public:
-        extEEPROM(unsigned int deviceCapacity, byte pageSize);
+        extEEPROM(unsigned int deviceCapacity, byte nDevice, byte pageSize);
         byte write(unsigned long addr, byte *values, byte nBytes);
         byte read(unsigned long addr, byte *values, byte nBytes);
         
     private:
-        uint16_t _dvcSize;      //capacity of one EEPROM device, in kilobytes (kB)
+        uint16_t _dvcCapacity;          //capacity of one EEPROM device, in kilobytes (kB)
+        uint8_t _nDevice;               //number of devices on the bus
         uint8_t _pageSize;
         uint8_t _addrShift;
+        unsigned long _totalCapacity;   //capacity of all EEPROM devices on the bus, in bytes
 };
 
 #endif

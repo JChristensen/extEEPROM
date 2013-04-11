@@ -26,13 +26,16 @@
  * deviceCapacity is the capacity of a single EEPROM device in          *
  * kilobytes (kB) and should be either 32 or 256. Other values will     *
  * result in undefined behavior!                                        *
+ * nDevice is the number of EEPROM devices on the I2C bus.              *
  * pageSize is in bytes.                                                *
  *----------------------------------------------------------------------*/
-extEEPROM::extEEPROM(unsigned int deviceCapacity, byte pageSize)
+extEEPROM::extEEPROM(unsigned int deviceCapacity, byte nDevice, byte pageSize)
 {
-    _dvcSize = deviceCapacity;
+    _dvcCapacity = deviceCapacity;
+    _nDevice = nDevice;
     _pageSize = pageSize;
-    if (_dvcSize == 256)
+    _totalCapacity = _dvcCapacity * _nDevice * 1024UL;
+    if (_dvcCapacity == 256)
         _addrShift = 16;
     else
         _addrShift = 15;
@@ -41,6 +44,9 @@ extEEPROM::extEEPROM(unsigned int deviceCapacity, byte pageSize)
 
 /*----------------------------------------------------------------------*
  * Write bytes to external EEPROM.                                      *
+ * If the I/O would extend past the top of the EEPROM address space,    *
+ * a status of 9 is returned. For I2C errors, the status from the       *
+ * Arduino Wire library is passed back through to the caller.           *
  *----------------------------------------------------------------------*/
 byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
 {
@@ -48,6 +54,10 @@ byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
     uint8_t txStatus;       //transmit status
     uint8_t nWrite;         //number of bytes to write
     uint8_t nPage;          //number of bytes remaining on current page, starting at addr
+    
+    if (addr + nBytes > _totalCapacity) {   //will this write go the top of the EEPROM?
+        return 9;                           //yes, tell the caller
+    }
     
     while (nBytes > 0) {
         nPage = _pageSize - ( addr & (_pageSize - 1) );
@@ -80,12 +90,19 @@ byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
 
 /*----------------------------------------------------------------------*
  * Read bytes from external EEPROM.                                     *
+ * If the I/O would extend past the top of the EEPROM address space,    *
+ * a status of 9 is returned. For I2C errors, the status from the       *
+ * Arduino Wire library is passed back through to the caller.           *
  *----------------------------------------------------------------------*/
 byte extEEPROM::read(unsigned long addr, byte *values, byte nBytes)
 {
     byte deviceAddr = EEPROM_ADDR | (byte) (addr >> _addrShift);
     byte rxStatus;
     uint8_t nRead;              //number of bytes to read
+
+    if (addr + nBytes > _totalCapacity) {   //will this read take us past the top of the EEPROM?
+        return 9;                           //yes, tell the caller
+    }
 
     while (nBytes > 0) {
         nRead = BUFFER_LENGTH < nBytes ? BUFFER_LENGTH : nBytes;
