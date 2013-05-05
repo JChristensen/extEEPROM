@@ -45,8 +45,8 @@ extEEPROM::extEEPROM(unsigned int deviceCapacity, byte nDevice, unsigned int pag
 /*----------------------------------------------------------------------*
  * Write bytes to external EEPROM.                                      *
  * If the I/O would extend past the top of the EEPROM address space,    *
- * a status of 9 is returned. For I2C errors, the status from the       *
- * Arduino Wire library is passed back through to the caller.           *
+ * a status of EEPROM_ADDR_ERR is returned. For I2C errors, the status  *
+ * from the Arduino Wire library is passed back through to the caller.  *
  *----------------------------------------------------------------------*/
 byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
 {
@@ -55,8 +55,8 @@ byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
     uint8_t nWrite;         //number of bytes to write
     uint16_t nPage;         //number of bytes remaining on current page, starting at addr
     
-    if (addr + nBytes > _totalCapacity) {   //will this write go the top of the EEPROM?
-        return 9;                           //yes, tell the caller
+    if (addr + nBytes > _totalCapacity) {   //will this write go past the top of the EEPROM?
+        return EEPROM_ADDR_ERR;             //yes, tell the caller
     }
     
     while (nBytes > 0) {
@@ -92,8 +92,8 @@ byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
 /*----------------------------------------------------------------------*
  * Read bytes from external EEPROM.                                     *
  * If the I/O would extend past the top of the EEPROM address space,    *
- * a status of 9 is returned. For I2C errors, the status from the       *
- * Arduino Wire library is passed back through to the caller.           *
+ * a status of EEPROM_ADDR_ERR is returned. For I2C errors, the status  *
+ * from the Arduino Wire library is passed back through to the caller.  *
  *----------------------------------------------------------------------*/
 byte extEEPROM::read(unsigned long addr, byte *values, byte nBytes)
 {
@@ -103,7 +103,7 @@ byte extEEPROM::read(unsigned long addr, byte *values, byte nBytes)
     uint16_t nPage;             //number of bytes remaining on current page, starting at addr
 
     if (addr + nBytes > _totalCapacity) {   //will this read take us past the top of the EEPROM?
-        return 9;                           //yes, tell the caller
+        return EEPROM_ADDR_ERR;             //yes, tell the caller
     }
 
     while (nBytes > 0) {

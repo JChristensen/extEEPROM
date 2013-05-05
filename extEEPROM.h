@@ -39,6 +39,9 @@
 //24XX256 I2C Address
 #define EEPROM_ADDR 0x50
 
+//EEPROM addressing error, returned by write() or read() if upper address bound is exceeded
+#define EEPROM_ADDR_ERR 9
+
 class extEEPROM
 {
     public:
