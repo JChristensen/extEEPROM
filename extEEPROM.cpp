@@ -51,11 +51,12 @@
 // - nDevice is the number of EEPROM devices on the I2C bus (all must
 //   be identical).
 // - pageSize is the EEPROM's page size in bytes.
-extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize)
+extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize, uint8_t eepromAddr)
 {
     _dvcCapacity = deviceCapacity;
     _nDevice = nDevice;
     _pageSize = pageSize;
+    _eepromAddr = eepromAddr;
     _totalCapacity = _nDevice * _dvcCapacity * 1024UL / 8;
     _nAddrBytes = deviceCapacity > kbits_16 ? 2 : 1;       //two address bytes needed for eeproms > 16kbits
 
@@ -73,12 +74,15 @@ extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pa
     }
 }
 
-//initialize the I2C bus and try a dummy write (no data sent)
+//initialize the I2C bus and do a dummy write (no data sent)
 //to the device so that the caller can determine whether it is responding.
-byte extEEPROM::begin(uint8_t eepromAddr)
+//when using a 400kHz clock speed and there are multiple I2C devices on the
+//bus (other than EEPROM), call extEEPROM::begin() after any initialization
+//calls for the other devices to ensure the intended I2C clock speed is set.
+byte extEEPROM::begin(twiClockFreq_t twiFreq)
 {
-    _eepromAddr = eepromAddr;
     Wire.begin(_eepromAddr);
+    TWBR = ( (F_CPU / twiFreq) - 16) / 2;
     Wire.beginTransmission(_eepromAddr);
     if (_nAddrBytes == 2) i2cWrite(0);      //high addr byte
     i2cWrite(0);                            //low addr byte
