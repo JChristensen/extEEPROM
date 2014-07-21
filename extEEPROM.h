@@ -1,15 +1,25 @@
 /*-----------------------------------------------------------------------------*
- * extEEPROM.cpp - Arduino library to support external I2C EEPROMs.            *
+ * extEEPROM.h - Arduino library to support external I2C EEPROMs.              *
  *                                                                             *
  * This library will work with most I2C serial EEPROM chips between 2k bits    *
  * and 2048k bits (2M bits) in size. Multiple EEPROMs on the bus are supported *
- * as a single address space. Certain assumptions are made regarding the       *
- * EEPROM device addressing. These assumptions should be true for most EEPROMs *
+ * as a single address space. I/O across block, page and device boundaries     *
+ * is supported. Certain assumptions are made regarding the EEPROM             *
+ * device addressing. These assumptions should be true for most EEPROMs        *
  * but there are exceptions, so read the datasheet and know your hardware.     *
  *                                                                             *
  * The library should also work for EEPROMs smaller than 2k bits, assuming     *
- * that there is only one on the bus and also that the user is careful not     *
- * to exceed the maximum address for the EEPROM.                               *
+ * that there is only one EEPROM on the bus and also that the user is careful  *
+ * to not exceed the maximum address for the EEPROM.                           *
+ *                                                                             *
+ * Library tested with:                                                        *
+ *   Microchip 24AA02E48 (2k bit)                                              *
+ *   Microchip 24LC256 (256k bit)                                              *
+ *   Microchip 24FC1026 (1M bit, thanks to Gabriele B on the Arduino forum)    *
+ *   ST Micro M24M02 (2M bit)                                                  *
+ *                                                                             *
+ * Library will NOT work with Microchip 24xx1025 as its control byte does not  *
+ * conform to the following assumptions.                                       *
  *                                                                             *
  * Device addressing assumptions:                                              *
  * 1. The I2C address sequence consists of a control byte followed by one      *
@@ -27,6 +37,7 @@
  *    Depending on EEPROM device size, this may result in one or more of the   *
  *    most significant bits in the I2C address bytes being unused (or "don't   *
  *    care").                                                                  *
+ * 4. An EEPROM contains an integral number of pages.                          *
  *                                                                             *
  * To use the extEEPROM library, the Arduino Wire library must also            *
  * be included.                                                                *
@@ -43,20 +54,7 @@
 #ifndef extEEPROM_h
 #define extEEPROM_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
-#else
-#include <WProgram.h>
-#endif
-
-//define release-independent I2C functions
-#if ARDUINO >= 100
-#define i2cRead Wire.read
-#define i2cWrite Wire.write
-#else
-#define i2cRead Wire.receive
-#define i2cWrite Wire.send
-#endif
 
 //EEPROM size in kilobits. EEPROM part numbers are usually designated in k-bits.
 enum eeprom_size_t {
@@ -84,7 +82,9 @@ class extEEPROM
         extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize, byte eepromAddr = 0x50);
         byte begin(twiClockFreq_t twiFreq = twiClock100kHz);
         byte write(unsigned long addr, byte *values, byte nBytes);
+        byte write(unsigned long addr, byte value);
         byte read(unsigned long addr, byte *values, byte nBytes);
+        int read(unsigned long addr);
 
     private:
         uint8_t _eepromAddr;            //eeprom i2c address

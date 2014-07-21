@@ -3,13 +3,23 @@
  *                                                                             *
  * This library will work with most I2C serial EEPROM chips between 2k bits    *
  * and 2048k bits (2M bits) in size. Multiple EEPROMs on the bus are supported *
- * as a single address space. Certain assumptions are made regarding the       *
- * EEPROM device addressing. These assumptions should be true for most EEPROMs *
+ * as a single address space. I/O across block, page and device boundaries     *
+ * is supported. Certain assumptions are made regarding the EEPROM             *
+ * device addressing. These assumptions should be true for most EEPROMs        *
  * but there are exceptions, so read the datasheet and know your hardware.     *
  *                                                                             *
  * The library should also work for EEPROMs smaller than 2k bits, assuming     *
- * that there is only one on the bus and also that the user is careful not     *
- * to exceed the maximum address for the EEPROM.                               *
+ * that there is only one EEPROM on the bus and also that the user is careful  *
+ * to not exceed the maximum address for the EEPROM.                           *
+ *                                                                             *
+ * Library tested with:                                                        *
+ *   Microchip 24AA02E48 (2k bit)                                              *
+ *   Microchip 24LC256 (256k bit)                                              *
+ *   Microchip 24FC1026 (1M bit, thanks to Gabriele B on the Arduino forum)    *
+ *   ST Micro M24M02 (2M bit)                                                  *
+ *                                                                             *
+ * Library will NOT work with Microchip 24xx1025 as its control byte does not  *
+ * conform to the following assumptions.                                       *
  *                                                                             *
  * Device addressing assumptions:                                              *
  * 1. The I2C address sequence consists of a control byte followed by one      *
@@ -27,6 +37,7 @@
  *    Depending on EEPROM device size, this may result in one or more of the   *
  *    most significant bits in the I2C address bytes being unused (or "don't   *
  *    care").                                                                  *
+ * 4. An EEPROM contains an integral number of pages.                          *
  *                                                                             *
  * To use the extEEPROM library, the Arduino Wire library must also            *
  * be included.                                                                *
@@ -51,6 +62,7 @@
 // - nDevice is the number of EEPROM devices on the I2C bus (all must
 //   be identical).
 // - pageSize is the EEPROM's page size in bytes.
+// - eepromAddr is the EEPROM's I2C address and defaults to 0x50 which is common.
 extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize, uint8_t eepromAddr)
 {
     _dvcCapacity = deviceCapacity;
@@ -76,7 +88,7 @@ extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pa
 
 //initialize the I2C bus and do a dummy write (no data sent)
 //to the device so that the caller can determine whether it is responding.
-//when using a 400kHz clock speed and there are multiple I2C devices on the
+//when using a 400kHz bus speed and there are multiple I2C devices on the
 //bus (other than EEPROM), call extEEPROM::begin() after any initialization
 //calls for the other devices to ensure the intended I2C clock speed is set.
 byte extEEPROM::begin(twiClockFreq_t twiFreq)
@@ -84,15 +96,15 @@ byte extEEPROM::begin(twiClockFreq_t twiFreq)
     Wire.begin(_eepromAddr);
     TWBR = ( (F_CPU / twiFreq) - 16) / 2;
     Wire.beginTransmission(_eepromAddr);
-    if (_nAddrBytes == 2) i2cWrite(0);      //high addr byte
-    i2cWrite(0);                            //low addr byte
+    if (_nAddrBytes == 2) Wire.write(0);      //high addr byte
+    Wire.write(0);                            //low addr byte
     return Wire.endTransmission();
 }
 
-// Write bytes to external EEPROM.
-// If the I/O would extend past the top of the EEPROM address space,
-// a status of EEPROM_ADDR_ERR is returned. For I2C errors, the status
-// from the Arduino Wire library is passed back through to the caller.
+//Write bytes to external EEPROM.
+//If the I/O would extend past the top of the EEPROM address space,
+//a status of EEPROM_ADDR_ERR is returned. For I2C errors, the status
+//from the Arduino Wire library is passed back through to the caller.
 byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
 {
     uint8_t ctrlByte;       //control byte (I2C device address & chip/block select bits)
@@ -111,18 +123,18 @@ byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
         nWrite = BUFFER_LENGTH - _nAddrBytes < nWrite ? BUFFER_LENGTH - _nAddrBytes : nWrite;
         ctrlByte = _eepromAddr | (byte) (addr >> _csShift);
         Wire.beginTransmission(ctrlByte);
-        if (_nAddrBytes == 2) i2cWrite( (byte) (addr >> 8) );   //high addr byte
-        i2cWrite( (byte) addr );                                //low addr byte
-        i2cWrite(values, nWrite);
+        if (_nAddrBytes == 2) Wire.write( (byte) (addr >> 8) );   //high addr byte
+        Wire.write( (byte) addr );                                //low addr byte
+        Wire.write(values, nWrite);
         txStatus = Wire.endTransmission();
         if (txStatus != 0) return txStatus;
 
         //wait up to 50ms for the write to complete
         for (uint8_t i=100; i; --i) {
-            delayMicroseconds(500);                //no point in waiting too fast
+            delayMicroseconds(500);                     //no point in waiting too fast
             Wire.beginTransmission(ctrlByte);
-            if (_nAddrBytes == 2) i2cWrite(0);      //high addr byte
-            i2cWrite(0);                            //low addr byte
+            if (_nAddrBytes == 2) Wire.write(0);        //high addr byte
+            Wire.write(0);                              //low addr byte
             txStatus = Wire.endTransmission();
             if (txStatus == 0) break;
         }
@@ -156,17 +168,40 @@ byte extEEPROM::read(unsigned long addr, byte *values, byte nBytes)
         nRead = BUFFER_LENGTH < nRead ? BUFFER_LENGTH : nRead;
         ctrlByte = _eepromAddr | (byte) (addr >> _csShift);
         Wire.beginTransmission(ctrlByte);
-        if (_nAddrBytes == 2) i2cWrite( (byte) (addr >> 8) );   //high addr byte
-        i2cWrite( (byte) addr );                                //low addr byte
+        if (_nAddrBytes == 2) Wire.write( (byte) (addr >> 8) );   //high addr byte
+        Wire.write( (byte) addr );                                //low addr byte
         rxStatus = Wire.endTransmission();
         if (rxStatus != 0) return rxStatus;        //read error
 
         Wire.requestFrom(ctrlByte, nRead);
-        for (byte i=0; i<nRead; i++) values[i] = i2cRead();
+        for (byte i=0; i<nRead; i++) values[i] = Wire.read();
 
         addr += nRead;          //increment the EEPROM address
         values += nRead;        //increment the input data pointer
         nBytes -= nRead;        //decrement the number of bytes left to write
     }
     return 0;
+}
+
+//Write a single byte to external EEPROM.
+//If the I/O would extend past the top of the EEPROM address space,
+//a status of EEPROM_ADDR_ERR is returned. For I2C errors, the status
+//from the Arduino Wire library is passed back through to the caller.
+byte extEEPROM::write(unsigned long addr, byte value)
+{
+    return write(addr, &value, 1);
+}
+
+//Read a single byte from external EEPROM.
+//If the I/O would extend past the top of the EEPROM address space,
+//a status of EEPROM_ADDR_ERR is returned. For I2C errors, the status
+//from the Arduino Wire library is passed back through to the caller.
+//To distinguish error values from valid data, error values are returned as negative numbers.
+int extEEPROM::read(unsigned long addr)
+{
+    uint8_t data;
+    int ret;
+    
+    ret = read(addr, &data, 1);
+    return ret == 0 ? data : -ret;
 }
