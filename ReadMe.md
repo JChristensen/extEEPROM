@@ -81,10 +81,10 @@ Instantiates an external EEPROM object.
 #####Syntax
 `extEEPROM myEEPROM(eeprom_size_t devCap, byte nDev, unsigned int pgSize, byte busAddr));`
 #####Parameters
-**devCap** *(eeprom_size_t)*: The size of one EEPROM device in k-bits. Choose a value from the eeprom_size_t enumeration above.
-**nDevCap** *(byte)*: The number of EEPROM devices on the bus. Note that if there are multiple EEPROM devices on the bus, they must be identical and each must have its address pins strapped properly.
-**pgSize** *(unsigned int)*: The EEPROM page size in bytes. Consult the datasheet if you are unsure of the page size.
-**busAddr** *(byte)*: The base I2C bus address for the EEPROM(s). 0x50 is a common value and this parameter can be omitted, in which case 0x50 will be used as the default.
+**devCap** *(eeprom_size_t)*: The size of one EEPROM device in k-bits. Choose a value from the eeprom_size_t enumeration above.  
+**nDevCap** *(byte)*: The number of EEPROM devices on the bus. Note that if there are multiple EEPROM devices on the bus, they must be identical and each must have its address pins strapped properly.  
+**pgSize** *(unsigned int)*: The EEPROM page size in bytes. Consult the datasheet if you are unsure of the page size.  
+**busAddr** *(byte)*: The base I2C bus address for the EEPROM(s). 0x50 is a common value and this parameter can be omitted, in which case 0x50 will be used as the default.  
 #####Example
 ```c++
 extEEPROM myEEPROM(kbits_256, 2, 64);			//two 24LC256 EEPROMS on the bus
@@ -115,9 +115,9 @@ Write one or more bytes to external EEPROM.
 #####Syntax
 `myEEPROM.write(unsigned long addr, byte* values, byte nBytes);`
 #####Parameters
-**addr** *(unsigned long)*: The beginning EEPROM location to write.
-**values** _(byte*)_: Pointer to an array containing the data to write.
-**nBytes** *(byte)*: The number of bytes to write.
+**addr** *(unsigned long)*: The beginning EEPROM location to write.  
+**values** _(byte*)_: Pointer to an array containing the data to write.  
+**nBytes** *(byte)*: The number of bytes to write.  
 #####Returns
 I2C I/O status, zero if successful *(byte)*. See the [Arduino Wire.endTransmission() function](http://arduino.cc/en/Reference/WireEndTransmission) for a description of other return codes. Returns a status of EEPROM_ADDR_ERR if the I/O would extend past the top of the EEPROM address space.
 #####Example
@@ -141,8 +141,8 @@ Writes a single byte to external EEPROM.
 #####Syntax
 `myEEPROM.write(unsigned long addr, byte value);`
 #####Parameters
-**addr** *(unsigned long)*: The EEPROM location to write.
-**values** _(byte)_: The value to write.
+**addr** *(unsigned long)*: The EEPROM location to write.  
+**values** _(byte)_: The value to write.  
 #####Returns
 Same as multiple-byte write() above.
 #####Example
@@ -156,9 +156,9 @@ Reads one or more bytes from external EEPROM into an array supplied by the calle
 #####Syntax
 `myEEPROM.read(unsigned long addr, byte *values, byte nBytes);`
 #####Parameters
-**addr** *(unsigned long)*: The beginning EEPROM location to read from.
-**values** _(byte*)_: Pointer to an array to receive the data.
-**nBytes** *(byte)*: The number of bytes to read.
+**addr** *(unsigned long)*: The beginning EEPROM location to read from.  
+**values** _(byte*)_: Pointer to an array to receive the data.  
+**nBytes** *(byte)*: The number of bytes to read.  
 #####Returns
 I2C I/O status, zero if successful *(byte)*. See the [Arduino Wire.endTransmission() function](http://arduino.cc/en/Reference/WireEndTransmission) for a description of other return codes. Returns a status of EEPROM_ADDR_ERR if the I/O would extend past the top of the EEPROM address space.
 #####Example
