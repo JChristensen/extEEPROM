@@ -94,7 +94,7 @@ extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pa
 //calls for the other devices to ensure the intended I2C clock speed is set.
 byte extEEPROM::begin(twiClockFreq_t twiFreq)
 {
-    Wire.begin(_eepromAddr);
+    Wire.begin();
     TWBR = ( (F_CPU / twiFreq) - 16) / 2;
     Wire.beginTransmission(_eepromAddr);
     if (_nAddrBytes == 2) Wire.write(0);      //high addr byte
@@ -106,7 +106,7 @@ byte extEEPROM::begin(twiClockFreq_t twiFreq)
 //If the I/O would extend past the top of the EEPROM address space,
 //a status of EEPROM_ADDR_ERR is returned. For I2C errors, the status
 //from the Arduino Wire library is passed back through to the caller.
-byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
+byte extEEPROM::write(unsigned long addr, byte *values, unsigned int nBytes)
 {
     uint8_t ctrlByte;       //control byte (I2C device address & chip/block select bits)
     uint8_t txStatus = 0;   //transmit status
@@ -152,7 +152,7 @@ byte extEEPROM::write(unsigned long addr, byte *values, byte nBytes)
 //If the I/O would extend past the top of the EEPROM address space,
 //a status of EEPROM_ADDR_ERR is returned. For I2C errors, the status
 //from the Arduino Wire library is passed back through to the caller.
-byte extEEPROM::read(unsigned long addr, byte *values, byte nBytes)
+byte extEEPROM::read(unsigned long addr, byte *values, unsigned int nBytes)
 {
     byte ctrlByte;
     byte rxStatus;

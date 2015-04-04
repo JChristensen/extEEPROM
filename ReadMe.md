@@ -110,7 +110,7 @@ if ( i2cStat != 0 ) {
 	//there was a problem
 }
 ```
-###write(unsigned long addr, byte *values, byte nBytes)
+###write(unsigned long addr, byte *values, unsigned int nBytes)
 #####Description
 Write one or more bytes to external EEPROM.
 #####Syntax
@@ -118,7 +118,7 @@ Write one or more bytes to external EEPROM.
 #####Parameters
 **addr** *(unsigned long)*: The beginning EEPROM location to write.  
 **values** _(byte*)_: Pointer to an array containing the data to write.  
-**nBytes** *(byte)*: The number of bytes to write.  
+**nBytes** *(unsigned int)*: The number of bytes to write.  
 #####Returns
 I2C I/O status, zero if successful *(byte)*. See the [Arduino Wire.endTransmission() function](http://arduino.cc/en/Reference/WireEndTransmission) for a description of other return codes. Returns a status of EEPROM_ADDR_ERR if the I/O would extend past the top of the EEPROM address space.
 #####Example
@@ -151,7 +151,7 @@ Same as multiple-byte write() above.
 //write the value 16 to EEPROM location 314.
 byte i2cStat = myEEPROM.write(314, 16);
 ```
-###read(unsigned long addr, byte *values, byte nBytes)
+###read(unsigned long addr, byte *values, unsigned int nBytes)
 #####Description
 Reads one or more bytes from external EEPROM into an array supplied by the caller.
 #####Syntax
@@ -159,7 +159,7 @@ Reads one or more bytes from external EEPROM into an array supplied by the calle
 #####Parameters
 **addr** *(unsigned long)*: The beginning EEPROM location to read from.  
 **values** _(byte*)_: Pointer to an array to receive the data.  
-**nBytes** *(byte)*: The number of bytes to read.  
+**nBytes** *(unsigned int)*: The number of bytes to read.  
 #####Returns
 I2C I/O status, zero if successful *(byte)*. See the [Arduino Wire.endTransmission() function](http://arduino.cc/en/Reference/WireEndTransmission) for a description of other return codes. Returns a status of EEPROM_ADDR_ERR if the I/O would extend past the top of the EEPROM address space.
 #####Example
