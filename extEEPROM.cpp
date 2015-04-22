@@ -102,6 +102,21 @@ byte extEEPROM::begin(twiClockFreq_t twiFreq)
     return Wire.endTransmission();
 }
 
+
+uint8_t extEEPROM::smartSleep(uint8_t ctrlByte)
+{
+    uint8_t txStatus;
+    for (uint8_t i=100; i; --i) {
+        delayMicroseconds(500);                     //no point in waiting too fast
+        Wire.beginTransmission(ctrlByte);
+        if (_nAddrBytes == 2) Wire.write(0);        //high addr byte
+        Wire.write(0);                              //low addr byte
+        txStatus = Wire.endTransmission();
+        if (txStatus == 0) break;
+    }
+    return txStatus;
+}
+
 //Write bytes to external EEPROM.
 //If the I/O would extend past the top of the EEPROM address space,
 //a status of EEPROM_ADDR_ERR is returned. For I2C errors, the status
@@ -131,14 +146,7 @@ byte extEEPROM::write(unsigned long addr, byte *values, unsigned int nBytes)
         if (txStatus != 0) return txStatus;
 
         //wait up to 50ms for the write to complete
-        for (uint8_t i=100; i; --i) {
-            delayMicroseconds(500);                     //no point in waiting too fast
-            Wire.beginTransmission(ctrlByte);
-            if (_nAddrBytes == 2) Wire.write(0);        //high addr byte
-            Wire.write(0);                              //low addr byte
-            txStatus = Wire.endTransmission();
-            if (txStatus == 0) break;
-        }
+        txStatus=smartSleep(ctrlByte);
         if (txStatus != 0) return txStatus;
 
         addr += nWrite;         //increment the EEPROM address
@@ -168,6 +176,10 @@ byte extEEPROM::read(unsigned long addr, byte *values, unsigned int nBytes)
         nRead = nBytes < nPage ? nBytes : nPage;
         nRead = BUFFER_LENGTH < nRead ? BUFFER_LENGTH : nRead;
         ctrlByte = _eepromAddr | (byte) (addr >> _csShift);
+
+        rxStatus=smartSleep(ctrlByte);
+        if (rxStatus != 0) return rxStatus;        //read error
+
         Wire.beginTransmission(ctrlByte);
         if (_nAddrBytes == 2) Wire.write( (byte) (addr >> 8) );   //high addr byte
         Wire.write( (byte) addr );                                //low addr byte
@@ -175,7 +187,10 @@ byte extEEPROM::read(unsigned long addr, byte *values, unsigned int nBytes)
         if (rxStatus != 0) return rxStatus;        //read error
 
         Wire.requestFrom(ctrlByte, nRead);
-        for (byte i=0; i<nRead; i++) values[i] = Wire.read();
+        for (byte i=0; i<nRead; i++) 
+        {
+            values[i] = Wire.read();
+        }
 
         addr += nRead;          //increment the EEPROM address
         values += nRead;        //increment the input data pointer

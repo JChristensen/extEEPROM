@@ -88,6 +88,7 @@ class extEEPROM
         int read(unsigned long addr);
 
     private:
+        uint8_t smartSleep(uint8_t ctrlByte);
         uint8_t _eepromAddr;            //eeprom i2c address
         uint16_t _dvcCapacity;          //capacity of one EEPROM device, in kbits
         uint8_t _nDevice;               //number of devices on the bus
