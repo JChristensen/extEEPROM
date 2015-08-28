@@ -1,0 +1,19 @@
+{
+"name": "extEEPROM",
+"frameworks": "Arduino",
+"keywords": "eeprom, i2c",
+"description": "Arduino library to support external I2C EEPROMs",
+"authors":
+[
+    {
+        "name": "Jack Christensen",
+        "url": "https://github.com/JChristensen",
+        "maintainer": true
+    }
+],
+"repository":
+{
+    "type": "git",
+    "url": "https://github.com/JChristensen/extEEPROM"
+}
+}
