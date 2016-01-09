@@ -48,8 +48,9 @@
  * device boundaries, assuming an integral number of pages per device)         *
  * 08Jul2014 v3 - Generalized for 2kb - 2Mb EEPROMs.                           *
  * 																			   *
- * Paolo Paolucci 22-10-2015 v3.2											   *
- *																			   *                                                                             *
+ * Paolo Paolucci 22-10-2015 v3.1											   *
+ * 09-01-2016 v3.2 Add update function.										   *
+ *                                                                             *
  * External EEPROM Library by Jack Christensen is licensed under CC BY-SA 4.0, *
  * http://creativecommons.org/licenses/by-sa/4.0/                              *
  *-----------------------------------------------------------------------------*/
@@ -207,4 +208,24 @@ int extEEPROM::read(unsigned long addr)
     
     ret = read(addr, &data, 1);
     return ret == 0 ? data : -ret;
+}
+
+//Update bytes to external EEPROM.
+//For I2C errors, the status from the Arduino Wire library is passed back through to the caller.
+byte extEEPROM::update(unsigned long addr, byte *values, unsigned int nBytes)
+{
+	return false;
+}
+
+//Update a single byte to external EEPROM.
+//For I2C errors, the status from the Arduino Wire library is passed back through to the caller.
+byte extEEPROM::update(unsigned long addr, byte value)
+{
+    return (value != read(addr) ? write(addr, &value, 1) : 0);
+}
+
+//For I2C errors, the status from the Arduino Wire library is passed back through to the caller.
+unsigned long extEEPROM::length( void )
+{
+    return _totalCapacity * 8;
 }
