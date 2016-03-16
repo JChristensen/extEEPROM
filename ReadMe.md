@@ -1,9 +1,8 @@
 # Arduino External EEPROM Library v3.2 #
 
 Original library by http://github.com/JChristensen/extEEPROM
-ReadMe file by Jack Christensen Jul 2014
 
-![CC BY-SA](http://mirrors.creativecommons.org/presskit/buttons/80x15/png/by-sa.png)
+ReadMe file by Jack Christensen Jul 2014
 
 ## Introduction ##
 **Arduino External EEPROM Library**
@@ -205,3 +204,5 @@ else {
 	//data read ok
 }
 ```
+
+![CC BY-SA](http://mirrors.creativecommons.org/presskit/buttons/80x15/png/by-sa.png)
