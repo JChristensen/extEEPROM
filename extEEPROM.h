@@ -84,6 +84,7 @@ class extEEPROM
         byte begin(twiClockFreq_t twiFreq = twiClock100kHz);
         byte write(unsigned long addr, byte *values, unsigned int nBytes);
         byte write(unsigned long addr, byte value);
+        byte update(unsigned long addr, byte value) { return read(addr) == value ? 0 : write(addr, &value, 1); }
         byte read(unsigned long addr, byte *values, unsigned int nBytes);
         int read(unsigned long addr);
 
