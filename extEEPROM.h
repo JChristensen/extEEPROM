@@ -72,14 +72,14 @@ enum eeprom_size_t {
     kbits_2048 = 2048
 };
 
-enum twiClockFreq_t { twiClock100kHz = 100000, twiClock400kHz = 400000 };
-
 //EEPROM addressing error, returned by write() or read() if upper address bound is exceeded
 const uint8_t EEPROM_ADDR_ERR = 9;
 
 class extEEPROM
 {
     public:
+        //I2C clock frequencies
+        enum twiClockFreq_t { twiClock100kHz = 100000, twiClock400kHz = 400000 };
         extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize, byte eepromAddr = 0x50);
         byte begin(twiClockFreq_t twiFreq = twiClock100kHz);
         byte write(unsigned long addr, byte *values, unsigned int nBytes);
