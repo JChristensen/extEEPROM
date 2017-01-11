@@ -18,7 +18,7 @@ void setup(void)
 {
     pinMode(btnStart, INPUT_PULLUP);
     Serial.begin(115200);
-    uint8_t eepStatus = eep.begin(twiClock400kHz);      //go fast!
+    uint8_t eepStatus = eep.begin(extEEPROM::twiClock400kHz);   //go fast!
     if (eepStatus) {
         Serial << endl << F("extEEPROM.begin() failed, status = ") << eepStatus << endl;
         while (1);
