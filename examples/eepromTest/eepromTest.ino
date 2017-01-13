@@ -15,6 +15,7 @@ const uint8_t btnStart = 6;              //start button
 
 void setup(void)
 {
+<<<<<<< HEAD
   pinMode(btnStart, INPUT_PULLUP);
   Serial.begin(115200);
   uint8_t eepStatus = eep.begin(twiClock400kHz);      //go fast!
@@ -36,6 +37,27 @@ void setup(void)
   dump(32256, 64);        //the last 64 bytes
   //dump(32512, 64);        //across the device boundary
   //dump(65520, 16);        //the last 16 bytes
+=======
+    pinMode(btnStart, INPUT_PULLUP);
+    Serial.begin(115200);
+    uint8_t eepStatus = eep.begin(extEEPROM::twiClock400kHz);   //go fast!
+    if (eepStatus) {
+        Serial << endl << F("extEEPROM.begin() failed, status = ") << eepStatus << endl;
+        while (1);
+    }
+    
+    Serial << endl << F("Press button to start...") << endl;
+    while (digitalRead(btnStart) == HIGH) delay(10);    //wait for button push
+
+    uint8_t chunkSize = 64;    //this can be changed, but must be a multiple of 4 since we're writing 32-bit integers
+//    eeErase(chunkSize, 0, totalKBytes * 1024 - 1);
+    eeWrite(chunkSize);
+    eeRead(chunkSize);
+
+    dump(0, 16);            //the first 16 bytes
+    dump(32752, 32);        //across the device boundary
+    dump(65520, 16);        //the last 16 bytes
+>>>>>>> bbd5761d45f447205c604a374419b8641eee016b
 }
 
 void loop(void)
