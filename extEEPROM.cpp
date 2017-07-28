@@ -58,6 +58,12 @@
 #include <extEEPROM.h>
 #include <Wire.h>
 
+// workaround, BUFFER_LENGTH is not defined in Wire.h for SAMD controllers
+#ifndef BUFFER_LENGTH
+#define BUFFER_LENGTH 32
+#endif
+
+
 // Constructor.
 // - deviceCapacity is the capacity of a single EEPROM device in
 //   kilobits (kb) and should be one of the values defined in the
