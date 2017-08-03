@@ -47,6 +47,9 @@
  * 29Mar2013 v2 - Updated to span page boundaries (and therefore also          *
  * device boundaries, assuming an integral number of pages per device)         *
  * 08Jul2014 v3 - Generalized for 2kb - 2Mb EEPROMs.                           *
+ * 																			   *
+ * Paolo Paolucci 22-10-2015 v3.1											   *
+ * 09-01-2016 v3.2 Add update function.										   *
  *                                                                             *
  * External EEPROM Library by Jack Christensen is licensed under CC BY-SA 4.0, *
  * http://creativecommons.org/licenses/by-sa/4.0/                              *
@@ -54,6 +57,12 @@
 
 #include <extEEPROM.h>
 #include <Wire.h>
+
+// workaround, BUFFER_LENGTH is not defined in Wire.h for SAMD controllers
+#ifndef BUFFER_LENGTH
+#define BUFFER_LENGTH 32
+#endif
+
 
 // Constructor.
 // - deviceCapacity is the capacity of a single EEPROM device in
@@ -95,10 +104,10 @@ extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pa
 byte extEEPROM::begin(twiClockFreq_t twiFreq)
 {
     Wire.begin();
-    TWBR = ( (F_CPU / twiFreq) - 16) / 2;
+    Wire.setClock(twiFreq);
     Wire.beginTransmission(_eepromAddr);
-    if (_nAddrBytes == 2) Wire.write(0);      //high addr byte
-    Wire.write(0);                            //low addr byte
+    if (_nAddrBytes == 2) Wire.write((byte)0);      //high addr byte
+    Wire.write((byte)0);                            //low addr byte
     return Wire.endTransmission();
 }
 
@@ -134,8 +143,8 @@ byte extEEPROM::write(unsigned long addr, byte *values, unsigned int nBytes)
         for (uint8_t i=100; i; --i) {
             delayMicroseconds(500);                     //no point in waiting too fast
             Wire.beginTransmission(ctrlByte);
-            if (_nAddrBytes == 2) Wire.write(0);        //high addr byte
-            Wire.write(0);                              //low addr byte
+            if (_nAddrBytes == 2) Wire.write((byte)0);        //high addr byte
+            Wire.write((byte)0);                              //low addr byte
             txStatus = Wire.endTransmission();
             if (txStatus == 0) break;
         }
@@ -205,4 +214,24 @@ int extEEPROM::read(unsigned long addr)
     
     ret = read(addr, &data, 1);
     return ret == 0 ? data : -ret;
+}
+
+//Update bytes to external EEPROM.
+//For I2C errors, the status from the Arduino Wire library is passed back through to the caller.
+byte extEEPROM::update(unsigned long addr, byte *values, unsigned int nBytes)
+{
+	return false;
+}
+
+//Update a single byte to external EEPROM.
+//For I2C errors, the status from the Arduino Wire library is passed back through to the caller.
+byte extEEPROM::update(unsigned long addr, byte value)
+{
+    return (value != read(addr) ? write(addr, &value, 1) : 0);
+}
+
+//For I2C errors, the status from the Arduino Wire library is passed back through to the caller.
+unsigned long extEEPROM::length( void )
+{
+    return _totalCapacity * 8;
 }

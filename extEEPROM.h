@@ -47,6 +47,9 @@
  * 29Mar2013 v2 - Updated to span page boundaries (and therefore also          *
  * device boundaries, assuming an integral number of pages per device)         *
  * 08Jul2014 v3 - Generalized for 2kb - 2Mb EEPROMs.                           *
+ * 																			   *
+ * Paolo Paolucci 22-10-2015 v3.2											   *
+ * 09-01-2016 v3.2 Add update function.										   *
  *                                                                             *
  * External EEPROM Library by Jack Christensen is licensed under CC BY-SA 4.0, *
  * http://creativecommons.org/licenses/by-sa/4.0/                              *
@@ -86,7 +89,10 @@ class extEEPROM
         byte write(unsigned long addr, byte value);
         byte read(unsigned long addr, byte *values, unsigned int nBytes);
         int read(unsigned long addr);
-
+        byte update(unsigned long addr, byte *values, unsigned int nBytes);
+        byte update(unsigned long addr, byte value);
+		unsigned long length();
+		
     private:
         uint8_t _eepromAddr;            //eeprom i2c address
         uint16_t _dvcCapacity;          //capacity of one EEPROM device, in kbits

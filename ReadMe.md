@@ -1,9 +1,8 @@
-# Arduino External EEPROM Library v3 #
-http://github.com/JChristensen/extEEPROM
-ReadMe file  
-Jack Christensen Jul 2014
+# Arduino External EEPROM Library v3.3.4 #
 
-![CC BY-SA](http://mirrors.creativecommons.org/presskit/buttons/80x15/png/by-sa.png)
+Original library by http://github.com/JChristensen/extEEPROM
+
+ReadMe file by Jack Christensen Jul 2014
 
 ## Introduction ##
 **Arduino External EEPROM Library**
@@ -18,6 +17,7 @@ The **extEEPROM Library** has been tested with:
 - Microchip 24LC256 (256k bit)
 - Microchip 24FC1026 (1M bit, thanks to Gabriele B on the Arduino forum)
 - ST Micro M24M02 (2M bit)
+- Atmel AT24C256C (32k x 8, thanks to Searobin)
 
 The **extEEPROM Library** will **NOT** work with Microchip 24xx1025 as its control byte does not conform to the following assumptions.
 
@@ -205,3 +205,5 @@ else {
 	//data read ok
 }
 ```
+
+![CC BY-SA](http://mirrors.creativecommons.org/presskit/buttons/80x15/png/by-sa.png)
