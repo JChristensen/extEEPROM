@@ -95,7 +95,7 @@ extEEPROM::extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pa
 byte extEEPROM::begin(twiClockFreq_t twiFreq)
 {
     Wire.begin();
-    TWBR = ( (F_CPU / twiFreq) - 16) / 2;
+    Wire.setClock(twiFreq);
     Wire.beginTransmission(_eepromAddr);
     if (_nAddrBytes == 2) Wire.write(0);      //high addr byte
     Wire.write(0);                            //low addr byte
