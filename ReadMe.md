@@ -1,5 +1,4 @@
-
-# Arduino External EEPROM Library v3.3.4 #
+# Arduino External EEPROM Library v3.4 #
 
 Original library by http://github.com/JChristensen/extEEPROM
 
