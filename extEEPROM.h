@@ -59,6 +59,7 @@
 #define extEEPROM_h
 
 #include <Arduino.h>
+#include <Wire.h>
 
 //EEPROM size in kilobits. EEPROM part numbers are usually designated in k-bits.
 enum eeprom_size_t {
@@ -80,12 +81,19 @@ const uint8_t EEPROM_ADDR_ERR = 9;
 
 class extEEPROM
 {
+    private: 
+        // the private attribute used to comunicate with the correct I2C SERCOM
+	TwoWire *communication; 
+
     public:
         //I2C clock frequencies
         enum twiClockFreq_t { twiClock100kHz = 100000, twiClock400kHz = 400000 };
         extEEPROM(eeprom_size_t deviceCapacity, byte nDevice, unsigned int pageSize, byte eepromAddr = 0x50);
-        byte begin(twiClockFreq_t twiFreq = twiClock100kHz);
-        byte write(unsigned long addr, byte *values, unsigned int nBytes);
+
+	// It is ready for every I2C Sercom, by default use the main Wire
+        byte begin(twiClockFreq_t twiFreq = twiClock100kHz, TwoWire *_comm=&Wire); 
+        
+	byte write(unsigned long addr, byte *values, unsigned int nBytes);
         byte write(unsigned long addr, byte value);
         byte read(unsigned long addr, byte *values, unsigned int nBytes);
         int read(unsigned long addr);
