@@ -2,8 +2,6 @@
 
 Original library by http://github.com/JChristensen/extEEPROM
 
-ReadMe file by Jack Christensen Jul 2014
-
 ## Introduction ##
 **Arduino External EEPROM Library**
 
@@ -29,19 +27,26 @@ The **extEEPROM Library** will **NOT** work with Microchip 24xx1025 as its contr
 
 Note that the Arduino Wire library has a buffer size of 32 bytes. This limits the size of physical I/Os that can be done to EEPROM. For writes, one or two bytes are used for the address, so writing is therefore limited to 31 or 30 bytes. Because the **extEEPROM Library** will handle I/O across block, page and device boundaries, the only consequence this has for the user is one of efficiency; arbitrarily large blocks of data can be written and read; however, carefully chosen block sizes may reduce the number of physical I/Os needed.
 
-"Arduino External EEPROM Library" by Jack Christensen is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/).
-
 ## Installation ##
-To use the **extEEPROM Library**:  
-- Go to http://github.com/JChristensen/extEEPROM, click the **Download ZIP** button and save the ZIP file to a convenient location on your PC.
+
+### Install with the Library Manager
+- For Arduino IDE versions 1.6.2 and up, add library by selecting "Manage Libraries..." from the "Include Library" submenu within the Sketch menu.
+- The library manager will open and you will find a list of libraries that are already installed or ready for installation. Scroll the list to find **extEEPROM** library and click on it.
+ - Select the version of the library you want to install.
+ - Click on install and wait for the IDE to install the new library. Downloading may take time depending on your connection speed.
+ - Once it has finished, an Installed tag should appear, You can close the library manager.
+
+### Manual Install
+- Go to http://github.com/PaoloP74/extEEPROM, click the **Download ZIP** button and save the ZIP file to a convenient location on your PC.
 - Uncompress the downloaded file.  This will result in a folder containing all the files for the library, that has a name that includes the branch name, usually **extEEPROM-master**.
 - Rename the folder to just **extEEPROM**.
 - Copy the renamed folder to the Arduino sketchbook\libraries folder.
 
 ## Examples ##
 The following example sketch is included with the **extEEPROM Library**:
+- **eepromReadWrite**
 - **eepromTest:** Writes 32-bit integers to the entire EEPROM address space, starting at address 0 and continuing to the topmost address. These are then read back in and verified; any discrepancies are reported to the serial monitor.
-
+- **eepromTest_Wire1**
 ## Usage notes ##
 The **extEEPROM Library** is designed for use with Arduino version 1.0 or later.
 
@@ -50,7 +55,6 @@ To use the **extEEPROM Library**, the standard [Arduino Wire library](http://ard
 #include <Wire.h>         //http://arduino.cc/en/Reference/Wire (included with Arduino IDE)
 ```
 ## Enumerations ##
-
 ### eeprom_size_t
 ##### Description
 EEPROM device size in k-bits. Many manufacturers' EEPROM part numbers are designated in k-bits.
@@ -66,7 +70,6 @@ EEPROM device size in k-bits. Many manufacturers' EEPROM part numbers are design
 - kbits_512
 - kbits_1024
 - kbits_2048
-
 ### twiClockFreq_t
 ##### Description
 I2C bus speed.
@@ -75,12 +78,11 @@ I2C bus speed.
 - extEEPROM::twiClock400kHz
 
 ## Constructor ##
-
 ### extEEPROM(eeprom_size_t devCap, byte nDev, unsigned int pgSize, byte busAddr)
 ##### Description
 Instantiates an external EEPROM object.
 ##### Syntax
-`extEEPROM myEEPROM(eeprom_size_t devCap, byte nDev, unsigned int pgSize, byte busAddr));`
+`extEEPROM myEEPROM(eeprom_size_t devCap, byte nDev, unsigned int pgSize, byte busAddr);`
 ##### Parameters
 **devCap** *(eeprom_size_t)*: The size of one EEPROM device in k-bits. Choose a value from the eeprom_size_t enumeration above.  
 **nDev** *(byte)*: The number of EEPROM devices on the bus. Note that if there are multiple EEPROM devices on the bus, they must be identical and each must have its address pins strapped properly.  
@@ -98,11 +100,14 @@ extEEPROM oddEEPROM(kbits_8, 1, 16, 0x42);		//an EEPROM with a non-standard I2C 
 Initializes the library. Call this method once in the setup code. begin() does a dummy I/O so that the user may interrogate the return status to ensure the EEPROM is operational.
 ##### Syntax
 `myEEPROM.begin(twiClockFreq_t freq);`
-
+or
+`myEEPROM.begin(twiClockFreq_t freq, TwoWire *_comm);`
 ##### Parameters
-**freq** *(twiClockFreq_t)*: The desired I2C bus speed, `extEEPROM::twiClock100kHz` or `extEEPROM::twiClock400kHz`. Can be omitted in which case it will default to `twiClock100kHz`. **NOTE:** When using 400kHz, if there are other devices on the bus they must all support a 400kHz bus speed. **Secondly**, the other devices should be initialized first, as other libraries may not support adjusting the bus speed. To ensure the desired speed is set, call the extEEPROM.begin() function *after* initializing all other I2C devices.
+**freq** *(twiClockFreq_t)*: The desired I2C bus speed, `extEEPROM::twiClock100kHz` or `extEEPROM::twiClock400kHz`. Can be omitted in which case it will default to `twiClock100kHz`.
+**NOTE:** When using 400kHz, if there are other devices on the bus they must all support a 400kHz bus speed. **Secondly**, the other devices should be initialized first, as other libraries may not support adjusting the bus speed. To ensure the desired speed is set, call the extEEPROM.begin() function *after* initializing all other I2C devices.
 
-**_comm** *(TwoWire * )*: The Used I2C TwoWire channel . Can be omitted in which case it will default to the first Arduino I2C channel `Wire`.  If another of the possible I2C channel is used its pointer shall be passed as parameter. **NOTE:** If another I2C channel is unse, and not the default one, the first parameters **freq** MUST be defined.
+**_comm** *(TwoWire * )*: The Used I2C TwoWire channel . Can be omitted in which case it will default to the first Arduino I2C channel `Wire`.  If another of the possible I2C channel is used its pointer shall be passed as parameter.
+**NOTE:** If another I2C channel is unse, and not the default one, the first parameters **freq** MUST be defined.
 ##### Returns
 I2C I/O status, zero if successful *(byte)*. See the [Arduino Wire.endTransmission() function](http://arduino.cc/en/Reference/WireEndTransmission) for a description of other return codes.
 
@@ -151,9 +156,9 @@ if ( i2cStat != 0 ) {
 ### write(unsigned long addr, byte value)
 ##### Description
 Writes a single byte to external EEPROM.
-#####Syntax
+##### Syntax
 `myEEPROM.write(unsigned long addr, byte value);`
-#####Parameters
+##### Parameters
 **addr** *(unsigned long)*: The EEPROM location to write.  
 **values** _(byte)_: The value to write.  
 ##### Returns
@@ -174,7 +179,7 @@ Reads one or more bytes from external EEPROM into an array supplied by the calle
 **nBytes** *(unsigned int)*: The number of bytes to read.  
 ##### Returns
 I2C I/O status, zero if successful *(byte)*. See the [Arduino Wire.endTransmission() function](http://arduino.cc/en/Reference/WireEndTransmission) for a description of other return codes. Returns a status of EEPROM_ADDR_ERR if the I/O would extend past the top of the EEPROM address space.
-#####Example
+##### Example
 ```c++
 byte myData[10];
 //read 10 bytes starting at location 42
@@ -198,7 +203,6 @@ Reads a single byte from external EEPROM.
 **addr** *(unsigned long)*: The EEPROM location to read from.
 ##### Returns
 The data read from EEPROM or an error code *(int)*. To distinguish error values from valid data, error values are returned as negative numbers. See the [Arduino Wire.endTransmission() function](http://arduino.cc/en/Reference/WireEndTransmission) for a description of return codes. Returns a status of EEPROM_ADDR_ERR if the I/O would extend past the top of the EEPROM address space.
-
 ##### Example
 ```c++
 int myData;
@@ -218,5 +222,5 @@ else {
 }
 ```
 
+"Arduino External EEPROM Library" by Jack Christensen is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/).
 ![CC BY-SA](http://mirrors.creativecommons.org/presskit/buttons/80x15/png/by-sa.png)
-
