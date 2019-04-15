@@ -219,6 +219,10 @@ int extEEPROM::read(unsigned long addr)
 //For I2C errors, the status from the Arduino Wire library is passed back through to the caller.
 byte extEEPROM::update(unsigned long addr, byte *values, unsigned int nBytes)
 {
+    if (nBytes == 1) {
+        return update(addr, values[0]);
+    }
+
     return false;
 }
 
