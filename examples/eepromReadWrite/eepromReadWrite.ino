@@ -75,9 +75,8 @@ void parse(char inChar)
   const char addr_len = 5;
   char       addr_char[addr_len] = "";
   const char data_len = 3;
-  char       data_char[data_len] = "";
   char       size_char[data_len] = "";
-  char       inc = 0, i = 0, j = 0;
+  unsigned char inc = 0, i = 0, j = 0;
 
   switch (inChar) {
     case 'a':
