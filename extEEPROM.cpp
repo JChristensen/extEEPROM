@@ -134,8 +134,6 @@ byte extEEPROM::write(unsigned long addr, byte *values, unsigned int nBytes)
         for (uint8_t i=100; i; --i) {
             delayMicroseconds(500);                     //no point in waiting too fast
             Wire.beginTransmission(ctrlByte);
-            if (_nAddrBytes == 2) Wire.write(0);        //high addr byte
-            Wire.write(0);                              //low addr byte
             txStatus = Wire.endTransmission();
             if (txStatus == 0) break;
         }
