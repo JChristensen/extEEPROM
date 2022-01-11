@@ -1,2 +1,3 @@
 ## This library has been renamed. ##
-### Please see https://github.com/JChristensen/JC_EEPROM ###
+### Please use https://github.com/JChristensen/JC_EEPROM instead. ###
+This repository is no longer maintained; it has been archived and is read-only.
